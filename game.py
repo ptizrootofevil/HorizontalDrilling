@@ -43,12 +43,6 @@ class Button:
         self.dark_color = (155, 155, 155)
         self.light_color = (255, 255, 255)
 
-    def draw_button(self, screen, mouse):
-        if 20 <= mouse[0] <= 120 and 20 <= mouse[1] <= 70: 
-            pygame.draw.rect(screen, self.light_color, (self.location[0], self.location[1], self.size[0], self.size[1])) 
-        else: 
-            pygame.draw.rect(screen, self.dark_color, (self.location[0], self.location[1], self.size[0], self.size[1])) 
-
     def button_click(self, a_drill: Drill, mouse):
         if 20 <= mouse[0] <= 120 and 20 <= mouse[1] <= 70:
             a_drill.change_direction()
@@ -65,7 +59,7 @@ class Rock:
     def draw_rock(self, screen):
         pygame.draw.circle(screen, self.color, (self.location[0], self.location[1]), self.radius, self.radius)
 
-class Win_screen:
+class Win_square:
     def __init__(self, height):
         self.location = [1000, height//3]
         self.size = [100, 20]
@@ -81,58 +75,80 @@ def main():
     a_drill = Drill(height)
     a_lake = Lake(width, height)
     a_button = Button()
-    a_win_screen = Win_screen(height)
+    a_win_square = Win_square(height)
     rocks = [Rock(0, width, int(height*(2/3)), int(height/3)) for _ in range(3)]
     pygame.init()
     
     screen = pygame.display.set_mode((width, height))
-    pygame.display.set_caption("Moving Triangle")
+    pygame.display.set_caption("Horizontal drilling")
 
     # Main game loop
     win = False
-    running = True
-    while running:
+    lose = False
+    while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                break
+                pygame.quit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 a_button.button_click(a_drill, mouse)
+
                 
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_r]:
+            main()
+            pygame.quit()
+
         # Clear the screen
         screen.fill((0,0,0))
 
-        # Ground
-        pygame.draw.rect(screen, (160,82,45), (0, height/3, width, height*(2/3))) 
+        if not win and not lose:
+            # Ground
+            pygame.draw.rect(screen, (160,82,45), (0, height/3, width, height*(2/3))) 
+            
+            for rock in rocks:
+                rock.draw_rock(screen)
+            # Lake
+            pygame.draw.circle(screen, (0, 0, 255), (a_lake.location[0], a_lake.location[1]), a_lake.radius, a_lake.radius, draw_bottom_left=True, draw_bottom_right=True)
+            # Sky
+            pygame.draw.rect(screen, (125, 191, 221), (0, 0, width, height/3))
+            # Drill
+            pygame.draw.rect(screen, (255, 0, 0), (a_drill.location[0], a_drill.location[1], 5, 5))
+            # Win square
+            pygame.draw.rect(screen, (0, 255, 0), (1000, height//3, 100, 20))
+            # Draw the lines
+            pygame.draw.lines(screen, (0,0,0), False, a_drill.path, 2)
+            
+            a_drill.drill()
+            mouse = pygame.mouse.get_pos()
+            if 20 <= mouse[0] <= 120 and 20 <= mouse[1] <= 70: 
+                pygame.draw.rect(screen, a_button.light_color, (a_button.location[0], a_button.location[1], a_button.size[0], a_button.size[1])) 
+            else: 
+                pygame.draw.rect(screen, a_button.dark_color, (a_button.location[0], a_button.location[1], a_button.size[0], a_button.size[1])) 
+        elif win:
+            font = pygame.font.Font(None, 48)
+            quit_text = font.render("You`ve won!\nPress 'r' to restart", True, (0,255,0))
+            quit_rect = quit_text.get_rect(center=(width // 2, height // 2))
+            screen.blit(quit_text, quit_rect)
+        else:
+            font = pygame.font.Font(None, 48)
+            quit_text = font.render("You`ve lost!\nPress 'r' to restart", True, (255,0,0))
+            quit_rect = quit_text.get_rect(center=(width // 2, height // 2))
+            screen.blit(quit_text, quit_rect)
         
-        for rock in rocks:
-            rock.draw_rock(screen)
-        # Lake
-        pygame.draw.circle(screen, (0, 0, 255), (a_lake.location[0], a_lake.location[1]), a_lake.radius, a_lake.radius, draw_bottom_left=True, draw_bottom_right=True)
-        # Sky
-        pygame.draw.rect(screen, (125, 191, 221), (0, 0, width, height/3))
-        # Drill
-        pygame.draw.rect(screen, (255, 0, 0), (a_drill.location[0], a_drill.location[1], 5, 5))
-        # Win square
-        pygame.draw.rect(screen, (0, 255, 0), (1000, height//3, 100, 20))
-        # Draw the lines
-        pygame.draw.lines(screen, (0,0,0), False, a_drill.path, 2)
-        
-        a_drill.drill()
-
-        mouse = pygame.mouse.get_pos()
-
-        a_button.draw_button(screen, mouse)
 
         # Update the display
         pygame.display.flip()
 
         if a_lake.colision(a_drill.get_location()):
-            break
+            lose = True
         for rock in rocks:
             if rock.colision(a_drill.get_location()):
-                running = False
-        if a_win_screen.colision(a_drill.get_location()):
+                lose = True
+        if a_win_square.colision(a_drill.get_location()):
             win = True
+        x, y = a_drill.get_location()
+        if x < 0 or width < x or y > height or y < height//3:
+            lose = True
 
 
 
