@@ -25,7 +25,7 @@ class Drill:
     def get_location(self) -> list[int, int]:
         return self.location
 
-    def get_direcrion(self):
+    def get_direcrion(self) -> list[int, int]:
         return self.location[0] + self.direction[0]*7, self.location[1] + self.direction[1]*7
 
 class Lake:
@@ -36,33 +36,33 @@ class Lake:
     def colision(self, point: list[int, int]) -> bool:
         return (point[0] - self.location[0] ) ** 2 + (point[1] - self.location[1]) ** 2 <= self.radius ** 2 and point[1] > self.location[1]
 
-    def colision_with_rock(self, point, r):
+    def colision_with_rock(self, point: list[int, int], r: int) -> bool:
         return (self.location[0] - point[0])**2 + (self.location[1] - point[1])**2 <= (self.radius + r)**2
 
 class Button:
-    def __init__(self):
+    def __init__(self) -> None:
         self.location = np.array([20, 20])
         self.size = np.array([100, 50])
         self.text = 'Change direction'
         self.dark_color = (155, 155, 155)
         self.light_color = (255, 255, 255)
 
-    def button_click(self, a_drill: Drill, mouse):
+    def button_click(self, a_drill: Drill, mouse: list[int,int]) -> None:
         if 20 <= mouse[0] <= 120 and 20 <= mouse[1] <= 70:
             a_drill.change_direction()
 
 class Block_square:
-    def __init__(self, left, top, right, bottom):
+    def __init__(self, left: int, top: int, right: int, bottom: int) -> None:
         self.point1 = [left, top]
         self.point2 = [right, bottom]
 
-    def colision(self, point, r):
+    def colision(self, point: list[int, int], r: int) -> bool:
         closest_x = max(self.point1[0], min(point[0], self.point2[0]))
         closest_y = max(self.point1[1], min(point[1], self.point2[1]))
         return (point[0] - closest_x)**2 + (point[1] - closest_y)**2 <= r**2
 
 class Rock:
-    def __init__(self, left: int, right: int, top: int, bottom: int, start_square_block, win_square_block, lake):
+    def __init__(self, left: int, right: int, top: int, bottom: int, start_square_block: Block_square, win_square_block: Block_square, lake: Lake) -> None:
         while True:
             x, y, r = randint(left, right), randint(bottom, top), randint(30, 100)
             if start_square_block.colision([x,y], r):
@@ -79,15 +79,15 @@ class Rock:
     def colision(self, point: list[int, int]) -> bool:
         return (point[0] - self.location[0]) ** 2 + (point[1] - self.location[1]) ** 2 <= self.radius ** 2
 
-    def draw_rock(self, screen):
+    def draw_rock(self, screen: pygame.Surface) -> None:
         pygame.draw.circle(screen, self.color, (self.location[0], self.location[1]), self.radius, self.radius)
 
 class Win_square:
-    def __init__(self, height):
+    def __init__(self, height: int) -> None:
         self.location = [1000, height//3]
         self.size = [100, 20]
 
-    def colision(self, drill):
+    def colision(self, drill: Drill) -> bool:
         return 1000 <= drill[0] <= 1100 and 240 <= drill[1] <= 260
 
 def main():
@@ -189,4 +189,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
     
